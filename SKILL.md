@@ -7,7 +7,7 @@ description: |
   "build educational allegory site", or wants to scaffold a bilingual VitePress project for technical writing.
   Works for any technical domain: distributed systems, cryptography, ML, compilers, etc.
   Do NOT use for general documentation sites without allegorical storytelling component.
-version: 2.1.0
+version: 2.2.0
 author: Hermes Agent
 license: MIT
 metadata:
@@ -160,6 +160,64 @@ tags: [tag1, tag2, tag3]
 {source_concept_markdown}
 ---
 ```
+
+## 自监控与迭代
+
+Skill 是活文档。部署后持续监控触发率和执行质量，基于反馈迭代改进。
+
+### 健康检查
+
+```bash
+# 运行自检（评估 description 质量、结构完整性、feedback 趋势）
+python3 scripts/skill-audit.py
+```
+
+输出示例：
+```
+Health Score: [██████████████████████████████████████░░] 97/100 (Grade A)
+Issues found: 0 critical, 0 warnings, 1 suggestions
+```
+
+**评分维度**：
+- frontmatter 完整性（name、description、version）
+- description 质量（触发短语数量、negative triggers、字数）
+- SKILL.md 体积（>5000 词扣分，提示拆分至 references/）
+- references/ 和 templates/ 完整性
+- feedback-log 趋势（欠触发/过触发/执行错误统计）
+
+### 反馈记录
+
+每次使用 skill 后，在 `references/feedback-log.md` 记录：
+
+```markdown
+- [2026-04-24] trigger: miss | user said "build tech storytelling site" | expected to trigger
+- [2026-04-24] trigger: over | user said "write docs" | loaded incorrectly
+- [2026-04-24] exec: error | scaffold failed with "dir exists" | expected prompt for overwrite
+```
+
+### 自动改进
+
+```bash
+# 基于 feedback-log 生成针对性改进建议
+python3 scripts/skill-improve.py
+```
+
+功能：
+- 分析欠触发记录 → 建议补充 description 触发短语
+- 分析过触发记录 → 建议添加 negative triggers
+- 分析执行错误 → 定位需要加强的指令或错误处理
+- 输出可直接应用的 patch
+
+### 迭代工作流
+
+```
+使用 skill → 记录反馈 → 运行 audit → 运行 improve → 修改 SKILL.md → 提交 → 重复
+```
+
+建议频率：
+- **每次重大修改后**：运行 `skill-audit.py`
+- **每周**：review `feedback-log.md`，运行 `skill-improve.py`
+- **每月**：评估是否需要拆分 SKILL.md 到 references/
 
 ## 测试规范
 
